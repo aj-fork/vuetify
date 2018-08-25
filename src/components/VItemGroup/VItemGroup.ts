@@ -8,6 +8,11 @@ import { consoleWarn } from '../../util/console'
 // Types
 import Vue, { VNode } from 'vue/types'
 
+interface Toggleable extends Vue {
+  toggle: Function
+  value: undefined | null | number | string
+}
+
 /* @vue/component */
 export default mixins(
   Proxyable('inputValue'),
@@ -26,7 +31,7 @@ export default mixins(
 
   data () {
     return {
-      items: [] as Vue[],
+      items: [] as Toggleable[],
       // As long as a value is defined, show it
       // Otherwise, check if multiple
       // to determine which default to provide
@@ -65,7 +70,7 @@ export default mixins(
   },
 
   methods: {
-    getValue (item: any, i: number) {
+    getValue (item: Toggleable, i: number) {
       return item.value != null ? item.value : i
     },
     onClick (index: number) {
@@ -75,7 +80,7 @@ export default mixins(
         ? this.updateMultiple(value)
         : this.updateSingle(value)
     },
-    register (item: Vue) {
+    register (item: Toggleable) {
       const index = this.items.push(item) - 1
 
       item.$on('click', () => this.onClick(index))
@@ -125,7 +130,7 @@ export default mixins(
 
       this.internalValue = value
     },
-    unregister (item: Vue) {
+    unregister (item: Toggleable) {
       this.items = this.items.filter(i => i._uid !== item._uid)
     }
   },
