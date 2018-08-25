@@ -8,13 +8,13 @@ import TabsProps from './mixins/tabs-props'
 import TabsTouch from './mixins/tabs-touch'
 import TabsWatchers from './mixins/tabs-watchers'
 
+// Extensions
+import VItemGroup from '../VItemGroup'
+
 // Mixins
 import Colorable from '../../mixins/colorable'
 import SSRBootable from '../../mixins/ssr-bootable'
 import Themeable from '../../mixins/themeable'
-import {
-  provide as RegistrableProvide
-} from '../../mixins/registrable'
 
 // Directives
 import Resize from '../../directives/resize'
@@ -29,8 +29,9 @@ export default {
     Touch
   },
 
+  extends: VItemGroup,
+
   mixins: [
-    RegistrableProvide('tabs'),
     Colorable,
     SSRBootable,
     TabsComputed,
@@ -44,7 +45,6 @@ export default {
   provide () {
     return {
       tabs: this,
-      tabClick: this.tabClick,
       tabProxy: this.tabProxy,
       registerItems: this.registerItems,
       unregisterItems: this.unregisterItems
@@ -57,7 +57,6 @@ export default {
       content: [],
       isBooted: false,
       isOverflowing: false,
-      lazyValue: this.value,
       nextIconVisible: false,
       prevIconVisible: false,
       resizeTimeout: null,
@@ -115,18 +114,13 @@ export default {
       return this.widths.container > this.scrollOffset + this.widths.wrapper
     },
     callSlider () {
-      if (this.hideSlider || !this.activeTab) return false
-
-      // Give screen time to paint
-      const action = (this.activeTab || {}).action
-      const activeTab = action === this.activeTab
-        ? this.activeTab
-        : this.tabs.find(tab => tab.action === action)
+      if (this.hideSlider) return false
 
       this.$nextTick(() => {
-        if (!activeTab || !activeTab.$el) return
-        this.sliderWidth = activeTab.$el.scrollWidth
-        this.sliderLeft = activeTab.$el.offsetLeft
+        if (!this.activeTab || !this.activeTab.$el) return
+
+        this.sliderWidth = this.activeTab.$el.scrollWidth
+        this.sliderLeft = this.activeTab.$el.offsetLeft
       })
     },
     /**
@@ -165,20 +159,20 @@ export default {
       this.setOverflow()
     },
     findActiveLink () {
-      if (!this.tabs.length) return
+      // if (!this.items.length) return
 
-      const activeIndex = this.tabs.findIndex((tabItem, index) => {
-        const id = tabItem.action === tabItem ? index : tabItem.action
-        return id === this.lazyValue ||
-          tabItem.$el.firstChild.className.indexOf(this.activeClass) > -1
-      })
+      // const activeIndex = this.items.findIndex((tabItem, index) => {
+      //   const id = tabItem.action === tabItem ? index : tabItem.action
+      //   return id === this.lazyValue ||
+      //     tabItem.$el.firstChild.className.indexOf(this.activeClass) > -1
+      // })
 
-      const index = activeIndex > -1 ? activeIndex : 0
-      const tab = this.tabs[index]
+      // const index = activeIndex > -1 ? activeIndex : 0
+      // const tab = this.items[index]
 
-      /* istanbul ignore next */
-      // There is not a reliable way to test
-      this.inputValue = tab.action === tab ? index : tab.action
+      // /* istanbul ignore next */
+      // // There is not a reliable way to test
+      // this.inputValue = tab.action === tab ? index : tab.action
     },
     parseNodes () {
       const item = []
@@ -208,9 +202,6 @@ export default {
 
       return { tab, slider, items, item }
     },
-    register (options) {
-      this.tabs.push(options)
-    },
     scrollIntoView () {
       if (!this.activeTab) return
       if (!this.isOverflowing) return (this.scrollOffset = 0)
@@ -219,7 +210,7 @@ export default {
       const { clientWidth, offsetLeft } = this.activeTab.$el
       const itemOffset = clientWidth + offsetLeft
       let additionalOffset = clientWidth * 0.3
-      if (this.activeIndex === this.tabs.length - 1) {
+      if (this.activeIndex === this.items.length - 1) {
         additionalOffset = 0 // don't add an offset if selecting the last tab
       }
 
@@ -230,10 +221,6 @@ export default {
         this.scrollOffset -= totalWidth - itemOffset - additionalOffset
       }
     },
-    tabClick (tab) {
-      this.inputValue = tab.action === tab ? this.tabs.indexOf(tab) : tab.action
-      this.scrollIntoView()
-    },
     tabProxy (val) {
       this.inputValue = val
     },
@@ -242,16 +229,6 @@ export default {
     },
     unregisterItems () {
       this.tabItems = null
-    },
-    unregister (tab) {
-      this.tabs = this.tabs.filter(o => o !== tab)
-    },
-    updateTabs () {
-      for (let index = this.tabs.length; --index >= 0;) {
-        this.tabs[index].toggle(this.target)
-      }
-
-      this.setOverflow()
     }
   },
 

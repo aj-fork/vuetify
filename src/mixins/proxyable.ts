@@ -3,7 +3,7 @@ import Vue from 'vue'
 type InternalValue = undefined | null | string | string[]
 
 export default function proxyable (
-  prop: string = 'input',
+  prop: string = 'value',
   event: string = 'change'
 ) {
   return Vue.extend({

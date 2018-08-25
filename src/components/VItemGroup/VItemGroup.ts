@@ -42,6 +42,15 @@ export default mixins(
   },
 
   computed: {
+    selectedItems (): Toggleable[] {
+      return this.items.filter((item, index) => {
+        const value = this.getValue(item, index)
+
+        return this.multiple
+          ? (this.internalValue || []).includes(value)
+          : this.internalValue === value
+      })
+    },
     toggleMethod (): Function {
       if (!this.multiple) {
         return (v: any) => this.internalValue === v
@@ -70,7 +79,7 @@ export default mixins(
   },
 
   methods: {
-    getValue (item: Toggleable, i: number) {
+    getValue (item: Toggleable, i: number | undefined): any {
       return item.value != null ? item.value : i
     },
     onClick (index: number) {
@@ -86,12 +95,20 @@ export default mixins(
       item.$on('click', () => this.onClick(index))
     },
     updateItemsState () {
-      this.items.forEach((item, i) => {
-        const value = this.getValue(item, i)
+      if (this.mandatory &&
+        !this.selectedItems.length &&
+        this.items.length > 0
+      ) {
+        this.internalValue = this.getValue(this.items[0], 0)
+        return
+      }
 
+      this.items.forEach((item, i) => {
         if (typeof item.toggle !== 'function') {
           consoleWarn('Registered item is missing a toggle function', item)
         }
+
+        const value = this.getValue(item, i)
 
         item.toggle(this.toggleMethod(value))
       })

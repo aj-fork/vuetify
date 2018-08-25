@@ -6,16 +6,7 @@
 /* @vue/component */
 export default {
   watch: {
-    activeTab (tab, prev) {
-      !prev && tab && this.updateTabs()
-
-      setTimeout(this.callSlider, 0)
-
-      if (!tab) return
-
-      const action = tab.action
-      this.tabItems && this.tabItems(action === tab ? this.tabs.indexOf(tab) : action)
-    },
+    activeTab: 'callSlider',
     alignWithTitle: 'callSlider',
     centered: 'callSlider',
     fixedTabs: 'callSlider',

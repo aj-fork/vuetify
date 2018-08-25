@@ -18,8 +18,6 @@ export default {
     Themeable
   ],
 
-  inject: ['tabClick'],
-
   props: {
     activeClass: {
       type: String,
@@ -48,7 +46,7 @@ export default {
         [this.activeClass]: !this.to && this.isActive
       }
     },
-    action () {
+    value () {
       let to = this.to || this.href
 
       if (this.$router &&
@@ -65,7 +63,7 @@ export default {
 
       return typeof to === 'string'
         ? to.replace('#', '')
-        : this
+        : undefined
     }
   },
 
@@ -92,8 +90,6 @@ export default {
       ) e.preventDefault()
 
       this.$emit('click', e)
-
-      this.to || this.tabClick(this)
     },
     onRouteChange () {
       if (!this.to || !this.$refs.link) return
@@ -102,12 +98,12 @@ export default {
 
       this.$nextTick(() => {
         if (getObjectValueByPath(this.$refs.link, path)) {
-          this.tabClick(this)
+          this.$el && this.$el.click()
         }
       })
     },
-    toggle (action) {
-      this.isActive = (action === this) || (action === this.action)
+    toggle (isActive) {
+      this.isActive = isActive
     }
   },
 

@@ -17,6 +17,10 @@ export default {
     },
     hideSlider: Boolean,
     iconsAndText: Boolean,
+    mandatory: {
+      type: Boolean,
+      default: true
+    },
     mobileBreakPoint: {
       type: [Number, String],
       default: 1264,
