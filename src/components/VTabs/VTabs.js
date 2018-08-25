@@ -97,10 +97,6 @@ export default {
     tabs: 'onResize'
   },
 
-  mounted () {
-    this.checkIcons()
-  },
-
   methods: {
     checkIcons () {
       this.prevIconVisible = this.checkPrevIcon()
@@ -122,6 +118,11 @@ export default {
         this.sliderWidth = this.activeTab.$el.scrollWidth
         this.sliderLeft = this.activeTab.$el.offsetLeft
       })
+    },
+    init () {
+      this.checkIcons()
+      this.findActiveLink()
+      this.updateItemsState()
     },
     /**
      * When v-navigation-drawer changes the
@@ -159,20 +160,20 @@ export default {
       this.setOverflow()
     },
     findActiveLink () {
-      // if (!this.items.length) return
+      const index = this.items.findIndex(item => {
+        const link = item.$refs.link
+        const target = link._isVue ? link.$el : link
 
-      // const activeIndex = this.items.findIndex((tabItem, index) => {
-      //   const id = tabItem.action === tabItem ? index : tabItem.action
-      //   return id === this.lazyValue ||
-      //     tabItem.$el.firstChild.className.indexOf(this.activeClass) > -1
-      // })
+        return (
+          item.activeClass &&
+          item.to &&
+          target.classList.contains(item.activeClass)
+        )
+      })
 
-      // const index = activeIndex > -1 ? activeIndex : 0
-      // const tab = this.items[index]
-
-      // /* istanbul ignore next */
-      // // There is not a reliable way to test
-      // this.inputValue = tab.action === tab ? index : tab.action
+      if (index > -1) {
+        this.internalValue = this.getValue(this.items[index], index)
+      }
     },
     parseNodes () {
       const item = []

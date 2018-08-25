@@ -75,12 +75,15 @@ export default mixins(
   },
 
   mounted () {
-    this.updateItemsState()
+    this.init()
   },
 
   methods: {
     getValue (item: Toggleable, i: number | undefined): any {
       return item.value != null ? item.value : i
+    },
+    init () {
+      this.updateItemsState()
     },
     onClick (index: number) {
       const value = this.getValue(this.items[index], index)

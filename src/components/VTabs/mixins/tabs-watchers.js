@@ -13,7 +13,6 @@ export default {
     hasArrows (val) {
       if (!val) this.scrollOffset = 0
     },
-    isBooted: 'findActiveLink',
     lazyValue: 'updateTabs',
     right: 'callSlider',
     value (val) {
