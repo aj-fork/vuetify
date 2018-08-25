@@ -23,7 +23,7 @@ export default mixins(
   Positionable,
   Themeable,
   ToggleableFactory('inputValue'),
-  RegistrableInject('buttonGroup')
+  RegistrableInject('group')
   /* @vue/component */
 ).extend({
   name: 'v-btn',
@@ -87,14 +87,14 @@ export default mixins(
   },
 
   mounted () {
-    if (this.buttonGroup) {
-      this.buttonGroup.register(this)
+    if (this.group) {
+      this.group.register(this)
     }
   },
 
   beforeDestroy () {
-    if (this.buttonGroup) {
-      this.buttonGroup.unregister(this)
+    if (this.group) {
+      this.group.unregister(this)
     }
   },
 
@@ -130,6 +130,9 @@ export default mixins(
       }
 
       return this.$createElement('span', { 'class': 'v-btn__loading' }, children)
+    },
+    toggle (isActive: boolean) {
+      this.isActive = isActive
     }
   },
 
