@@ -1,9 +1,7 @@
 // Mixins
+import Groupable from '../../mixins/groupable'
 import Routable from '../../mixins/routable'
 import Themeable from '../../mixins/themeable'
-import {
-  inject as RegistrableInject
-} from '../../mixins/registrable'
 
 // Utilities
 import { getObjectValueByPath } from '../../util/helpers'
@@ -13,7 +11,7 @@ export default {
   name: 'v-tab',
 
   mixins: [
-    RegistrableInject('tabs', 'v-tab', 'v-tabs'),
+    Groupable,
     Routable,
     Themeable
   ],
@@ -29,15 +27,9 @@ export default {
     }
   },
 
-  data () {
-    return {
-      isActive: false
-    }
-  },
-
   computed: {
     isDark () {
-      return this.tabs.selfIsDark
+      return this.group.selfIsDark
     },
     classes () {
       return {
@@ -61,9 +53,7 @@ export default {
         to = resolve.href
       }
 
-      return typeof to === 'string'
-        ? to.replace('#', '')
-        : undefined
+      return (to || '').replace('#', '')
     }
   },
 
@@ -72,12 +62,7 @@ export default {
   },
 
   mounted () {
-    this.tabs.register(this)
     this.onRouteChange()
-  },
-
-  beforeDestroy () {
-    this.tabs.unregister(this)
   },
 
   methods: {
@@ -98,12 +83,9 @@ export default {
 
       this.$nextTick(() => {
         if (getObjectValueByPath(this.$refs.link, path)) {
-          this.$el && this.$el.click()
+          this.$emit('click')
         }
       })
-    },
-    toggle (isActive) {
-      this.isActive = isActive
     }
   },
 

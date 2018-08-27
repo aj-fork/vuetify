@@ -1,3 +1,7 @@
+// Styles
+import '../../stylus/components/_item-group.styl'
+
+// Mixins
 import Proxyable from '../../mixins/proxyable'
 import { provide as RegistrableProvide } from '../../mixins/registrable'
 
@@ -6,7 +10,7 @@ import mixins from '../../util/mixins'
 import { consoleWarn } from '../../util/console'
 
 // Types
-import Vue, { VNode } from 'vue/types'
+import Vue, { VNode, VNodeData } from 'vue/types'
 
 interface Toggleable extends Vue {
   toggle: Function
@@ -21,6 +25,7 @@ export default mixins(
   name: 'v-item-group',
 
   props: {
+    horizontal: Boolean,
     mandatory: Boolean,
     max: {
       type: [Number, String],
@@ -42,13 +47,18 @@ export default mixins(
   },
 
   computed: {
+    classes (): VNodeData['class'] {
+      return {
+        'v-item-group--horizontal': this.horizontal
+      }
+    },
     selectedItems (): Toggleable[] {
-      return this.items.filter((item, index) => {
-        const value = this.getValue(item, index)
+      const handler = this.multiple
+        ? (v: any) => (this.internalValue || []).includes(v)
+        : (v: any) => this.internalValue === v
 
-        return this.multiple
-          ? (this.internalValue || []).includes(value)
-          : this.internalValue === value
+      return this.items.filter((item, index) => {
+        return handler(this.getValue(item, index))
       })
     },
     toggleMethod (): Function {
@@ -57,7 +67,7 @@ export default mixins(
       }
 
       if (Array.isArray(this.internalValue)) {
-        return (v: any) => (this.internalValue || []).includes(v)
+        return (v: any) => ((this.internalValue || []) as string[]).includes(v)
       }
 
       return () => false
@@ -79,8 +89,8 @@ export default mixins(
   },
 
   methods: {
-    getValue (item: Toggleable, i: number | undefined): any {
-      return item.value != null ? item.value : i
+    getValue (item: Toggleable, i: number): string | number {
+      return item.value != null && item.value !== '' ? item.value : i
     },
     init () {
       this.updateItemsState()
@@ -107,10 +117,6 @@ export default mixins(
       }
 
       this.items.forEach((item, i) => {
-        if (typeof item.toggle !== 'function') {
-          consoleWarn('Registered item is missing a toggle function', item)
-        }
-
         const value = this.getValue(item, i)
 
         item.toggle(this.toggleMethod(value))
@@ -144,11 +150,11 @@ export default mixins(
       this.internalValue = internalValue
     },
     updateSingle (value: any) {
-      if (this.mandatory &&
-        value === this.internalValue
-      ) return
+      const isSame = value === this.internalValue
 
-      this.internalValue = value
+      if (this.mandatory && isSame) return
+
+      this.internalValue = isSame ? undefined : value
     },
     unregister (item: Toggleable) {
       this.items = this.items.filter(i => i._uid !== item._uid)
@@ -157,7 +163,13 @@ export default mixins(
 
   render (h): VNode {
     return h('div', {
-      staticClass: 'v-group-toggle'
-    }, this.$slots.default)
+      staticClass: 'v-item-group',
+      class: this.classes
+    }, [
+      h('div', {
+        staticClass: 'v-item-group__container',
+        ref: 'container'
+      }, this.$slots.default)
+    ])
   }
 })

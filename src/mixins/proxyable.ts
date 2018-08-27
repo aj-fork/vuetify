@@ -1,6 +1,6 @@
 import Vue from 'vue'
 
-type InternalValue = undefined | null | string | string[]
+type InternalValue = undefined | null | number | number[] | string | string[]
 
 export default function proxyable (
   prop: string = 'value',

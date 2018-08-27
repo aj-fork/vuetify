@@ -1,13 +1,6 @@
 // Styles
 import '../../stylus/components/_tabs.styl'
 
-// Component level mixins
-import TabsComputed from './mixins/tabs-computed'
-import TabsGenerators from './mixins/tabs-generators'
-import TabsProps from './mixins/tabs-props'
-import TabsTouch from './mixins/tabs-touch'
-import TabsWatchers from './mixins/tabs-watchers'
-
 // Extensions
 import VItemGroup from '../VItemGroup'
 
@@ -34,21 +27,58 @@ export default {
   mixins: [
     Colorable,
     SSRBootable,
-    TabsComputed,
-    TabsProps,
-    TabsGenerators,
-    TabsTouch,
-    TabsWatchers,
     Themeable
   ],
 
-  provide () {
-    return {
-      tabs: this,
-      tabProxy: this.tabProxy,
-      registerItems: this.registerItems,
-      unregisterItems: this.unregisterItems
-    }
+  // provide () {
+  //   return {
+  //     tabs: this,
+  //     tabProxy: this.tabProxy,
+  //     registerItems: this.registerItems,
+  //     unregisterItems: this.unregisterItems
+  //   }
+  // },
+
+  props: {
+    alignWithTitle: Boolean,
+    centered: Boolean,
+    fixedTabs: Boolean,
+    grow: Boolean,
+    height: {
+      type: [Number, String],
+      default: undefined,
+      validator: v => !isNaN(parseInt(v))
+    },
+    hideSlider: Boolean,
+    horizontal: {
+      type: Boolean,
+      default: true
+    },
+    iconsAndText: Boolean,
+    mandatory: {
+      type: Boolean,
+      default: true
+    },
+    mobileBreakPoint: {
+      type: [Number, String],
+      default: 1264,
+      validator: v => !isNaN(parseInt(v))
+    },
+    nextIcon: {
+      type: String,
+      default: '$vuetify.icons.next'
+    },
+    prevIcon: {
+      type: String,
+      default: '$vuetify.icons.prev'
+    },
+    right: Boolean,
+    showArrows: Boolean,
+    sliderColor: {
+      type: String,
+      default: 'accent'
+    },
+    value: [Number, String]
   },
 
   data () {
@@ -78,12 +108,42 @@ export default {
   },
 
   computed: {
+    activeIndex () {
+      if (this.selectedItems.length === 0) return -1
+
+      return this.items.findIndex((item, index) => {
+        return this.getValue(item, index) === this.internalValue
+      })
+    },
+    activeTab () {
+      if (!this.selectedItems.length) return undefined
+
+      return this.selectedItems[0]
+    },
+    containerStyles () {
+      return this.height ? {
+        height: `${parseInt(this.height, 10)}px`
+      } : null
+    },
+    hasArrows () {
+      return (this.showArrows || !this.isMobile) && this.isOverflowing
+    },
     isDark () {
       // Always inherit from parent
       return this.theme.isDark
     },
+    isMobile () {
+      return this.$vuetify.breakpoint.width < this.mobileBreakPoint
+    },
     selfIsDark () {
       return Themeable.options.computed.isDark.call(this)
+    },
+    sliderStyles () {
+      return {
+        left: `${this.sliderLeft}px`,
+        transition: this.sliderLeft != null ? null : 'none',
+        width: `${this.sliderWidth}px`
+      }
     },
     themeClasses () {
       return {
@@ -98,17 +158,105 @@ export default {
   },
 
   methods: {
-    checkIcons () {
-      this.prevIconVisible = this.checkPrevIcon()
-      this.nextIconVisible = this.checkNextIcon()
-    },
-    checkPrevIcon () {
-      return this.scrollOffset > 0
-    },
-    checkNextIcon () {
-      // Check one scroll ahead to know the width of right-most item
-      return this.widths.container > this.scrollOffset + this.widths.wrapper
-    },
+    // Generators
+    // genBar (items) {
+    //   return this.$createElement('div', this.setBackgroundColor(this.color, {
+    //     staticClass: 'v-tabs__bar',
+    //     'class': this.themeClasses,
+    //     ref: 'bar'
+    //   }), [
+    //     this.genTransition('prev'),
+    //     this.genWrapper(
+    //       this.genContainer(items)
+    //     ),
+    //     this.genTransition('next')
+    //   ])
+    // },
+    // genContainer (items) {
+    //   return this.$createElement('div', {
+    //     staticClass: 'v-tabs__container',
+    //     class: {
+    //       'v-tabs__container--align-with-title': this.alignWithTitle,
+    //       'v-tabs__container--centered': this.centered,
+    //       'v-tabs__container--fixed-tabs': this.fixedTabs,
+    //       'v-tabs__container--grow': this.grow,
+    //       'v-tabs__container--icons-and-text': this.iconsAndText,
+    //       'v-tabs__container--overflow': this.isOverflowing,
+    //       'v-tabs__container--right': this.right
+    //     },
+    //     style: this.containerStyles,
+    //     ref: 'container'
+    //   }, items)
+    // },
+    // genIcon (direction) {
+    //   if (!this.hasArrows ||
+    //     !this[`${direction}IconVisible`]
+    //   ) return null
+
+    //   return this.$createElement(VIcon, {
+    //     staticClass: `v-tabs__icon v-tabs__icon--${direction}`,
+    //     props: {
+    //       disabled: !this[`${direction}IconVisible`]
+    //     },
+    //     on: {
+    //       click: () => this.scrollTo(direction)
+    //     }
+    //   }, this[`${direction}Icon`])
+    // },
+    // genItems (items, item) {
+    //   if (items.length > 0) return items
+    //   if (!item.length) return null
+
+    //   return this.$createElement(VTabsItems, item)
+    // },
+    // genTransition (direction) {
+    //   return this.$createElement('transition', {
+    //     props: { name: 'fade-transition' }
+    //   }, [this.genIcon(direction)])
+    // },
+    // genWrapper (items) {
+    //   return this.$createElement('div', {
+    //     staticClass: 'v-tabs__wrapper',
+    //     class: {
+    //       'v-tabs__wrapper--show-arrows': this.hasArrows
+    //     },
+    //     ref: 'wrapper',
+    //     directives: [{
+    //       name: 'touch',
+    //       value: {
+    //         start: e => this.overflowCheck(e, this.onTouchStart),
+    //         move: e => this.overflowCheck(e, this.onTouchMove),
+    //         end: e => this.overflowCheck(e, this.onTouchEnd)
+    //       }
+    //     }]
+    //   }, [items])
+    // },
+    // genSlider (items) {
+    //   if (this.hideSlider) return null
+
+    //   if (!items.length) {
+    //     items = [this.$createElement(VTabsSlider, {
+    //       props: { color: this.sliderColor }
+    //     })]
+    //   }
+
+    //   return this.$createElement('div', {
+    //     staticClass: 'v-tabs__slider-wrapper',
+    //     style: this.sliderStyles
+    //   }, items)
+    // },
+
+    // checkIcons () {
+    //   this.prevIconVisible = this.checkPrevIcon()
+    //   this.nextIconVisible = this.checkNextIcon()
+    // },
+    // checkPrevIcon () {
+    //   return this.scrollOffset > 0
+    // },
+    // checkNextIcon () {
+    //   // Check one scroll ahead to know the width of right-most item
+    //   return this.widths.container > this.scrollOffset + this.widths.wrapper
+    // },
     callSlider () {
       if (this.hideSlider) return false
 
@@ -120,8 +268,7 @@ export default {
       })
     },
     init () {
-      this.checkIcons()
-      this.findActiveLink()
+      // this.checkIcons()
       this.updateItemsState()
     },
     /**
@@ -130,51 +277,35 @@ export default {
      * after the transition is complete
      */
     onResize () {
-      if (this._isDestroyed) return
+      // if (this._isDestroyed) return
 
-      this.setWidths()
+      // this.setWidths()
 
-      clearTimeout(this.resizeTimeout)
-      this.resizeTimeout = setTimeout(() => {
-        this.callSlider()
-        this.scrollIntoView()
-        this.checkIcons()
-      }, this.transitionTime)
+      // clearTimeout(this.resizeTimeout)
+      // this.resizeTimeout = setTimeout(() => {
+      //   this.callSlider()
+      //   this.scrollIntoView()
+      //   this.checkIcons()
+      // }, this.transitionTime)
     },
-    overflowCheck (e, fn) {
-      this.isOverflowing && fn(e)
-    },
-    scrollTo (direction) {
-      this.scrollOffset = this.newOffset(direction)
-    },
-    setOverflow () {
-      this.isOverflowing = this.widths.bar < this.widths.container
-    },
-    setWidths () {
-      const bar = this.$refs.bar ? this.$refs.bar.clientWidth : 0
-      const container = this.$refs.container ? this.$refs.container.clientWidth : 0
-      const wrapper = this.$refs.wrapper ? this.$refs.wrapper.clientWidth : 0
+    // overflowCheck (e, fn) {
+    //   this.isOverflowing && fn(e)
+    // },
+    // scrollTo (direction) {
+    //   this.scrollOffset = this.newOffset(direction)
+    // },
+    // setOverflow () {
+    //   this.isOverflowing = this.widths.bar < this.widths.container
+    // },
+    // setWidths () {
+    //   const bar = this.$refs.bar ? this.$refs.bar.clientWidth : 0
+    //   const container = this.$refs.container ? this.$refs.container.clientWidth : 0
+    //   const wrapper = this.$refs.wrapper ? this.$refs.wrapper.clientWidth : 0
 
-      this.widths = { bar, container, wrapper }
+    //   this.widths = { bar, container, wrapper }
 
-      this.setOverflow()
-    },
-    findActiveLink () {
-      const index = this.items.findIndex(item => {
-        const link = item.$refs.link
-        const target = link._isVue ? link.$el : link
-
-        return (
-          item.activeClass &&
-          item.to &&
-          target.classList.contains(item.activeClass)
-        )
-      })
-
-      if (index > -1) {
-        this.internalValue = this.getValue(this.items[index], index)
-      }
-    },
+    //   this.setOverflow()
+    // },
     parseNodes () {
       const item = []
       const items = []
@@ -221,32 +352,32 @@ export default {
       } else if (totalWidth < itemOffset) {
         this.scrollOffset -= totalWidth - itemOffset - additionalOffset
       }
-    },
-    tabProxy (val) {
-      this.inputValue = val
-    },
-    registerItems (fn) {
-      this.tabItems = fn
-    },
-    unregisterItems () {
-      this.tabItems = null
     }
-  },
-
-  render (h) {
-    const { tab, slider, items, item } = this.parseNodes()
-
-    return h('div', {
-      staticClass: 'v-tabs',
-      directives: [{
-        name: 'resize',
-        arg: 400,
-        modifiers: { quiet: true },
-        value: this.onResize
-      }]
-    }, [
-      this.genBar([this.hideSlider ? null : this.genSlider(slider), tab]),
-      this.genItems(items, item)
-    ])
+    // tabProxy (val) {
+    //   this.inputValue = val
+    // },
+    // registerItems (fn) {
+    //   this.tabItems = fn
+    // },
+    // unregisterItems () {
+    //   this.tabItems = null
+    // }
   }
+
+  //   render (h) {
+  //     const { tab, slider, items, item } = this.parseNodes()
+
+//     return h('div', {
+//       staticClass: 'v-tabs',
+//       directives: [{
+//         name: 'resize',
+//         arg: 400,
+//         modifiers: { quiet: true },
+//         value: this.onResize
+//       }]
+//     }, [
+//       this.genBar([this.genSlider(slider), tab]),
+//       this.genItems(items, item)
+//     ])
+//   }
 }
