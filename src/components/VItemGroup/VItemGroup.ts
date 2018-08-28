@@ -36,13 +36,13 @@ export default mixins(
 
   data () {
     return {
-      items: [] as Toggleable[],
       // As long as a value is defined, show it
       // Otherwise, check if multiple
       // to determine which default to provide
       internalLazyValue: this.value !== undefined
         ? this.value
-        : this.multiple ? [] : undefined
+        : this.multiple ? [] : undefined,
+      items: [] as Toggleable[]
     }
   },
 
@@ -53,12 +53,8 @@ export default mixins(
       }
     },
     selectedItems (): Toggleable[] {
-      const handler = this.multiple
-        ? (v: any) => (this.internalValue || []).includes(v)
-        : (v: any) => this.internalValue === v
-
       return this.items.filter((item, index) => {
-        return handler(this.getValue(item, index))
+        return this.toggleMethod(this.getValue(item, index))
       })
     },
     toggleMethod (): Function {
@@ -90,7 +86,9 @@ export default mixins(
 
   methods: {
     getValue (item: Toggleable, i: number): string | number {
-      return item.value != null && item.value !== '' ? item.value : i
+      if (item.value == null || item.value === '') return i
+
+      return item.value
     },
     init () {
       this.updateItemsState()
@@ -123,7 +121,7 @@ export default mixins(
       })
     },
     updateMultiple (value: any) {
-      const internalValue = (this.internalValue || []).slice() as string[]
+      const internalValue = ((this.internalValue || []) as string[]).slice()
       const index = internalValue.findIndex(val => val === value)
 
       if (
