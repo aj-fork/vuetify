@@ -11,6 +11,7 @@ import VProgressCircular from '../VProgressCircular'
 
 // Mixins
 import Colorable from '../../mixins/colorable'
+import Groupable from '../../mixins/groupable'
 import Positionable from '../../mixins/positionable'
 import Routable from '../../mixins/routable'
 import Themeable from '../../mixins/themeable'
@@ -19,6 +20,7 @@ import { inject as RegistrableInject } from '../../mixins/registrable'
 
 export default mixins(
   Colorable,
+  Groupable,
   Routable,
   Positionable,
   Themeable,
@@ -86,18 +88,6 @@ export default mixins(
     }
   },
 
-  mounted () {
-    if (this.group) {
-      this.group.register(this)
-    }
-  },
-
-  beforeDestroy () {
-    if (this.group) {
-      this.group.unregister(this)
-    }
-  },
-
   methods: {
     // Prevent focus to match md spec
     click (e: MouseEvent): void {
@@ -130,9 +120,6 @@ export default mixins(
       }
 
       return this.$createElement('span', { 'class': 'v-btn__loading' }, children)
-    },
-    toggle (isActive: boolean) {
-      this.isActive = isActive
     }
   },
 
